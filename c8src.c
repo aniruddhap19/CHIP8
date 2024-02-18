@@ -40,6 +40,93 @@ void opcode2(short count){
     stack_inst->stk[stack_inst->stack_ptr]=call_ad;
 }
 
+void opcode3(short count){
+    mem_t* instance = get_set_mem(NULL,GET);
+    reg_t* reg_inst = get_set_reg(NULL,GET);
+    uint16_t opcode_placeholder=((instance->program_mem[count])<<8)+((instance->program_mem[count+1]));
+    uint8_t reg_no = opcode_placeholder & 0x0F00;
+    uint8_t cmp_byte = opcode_placeholder &0x00FF;
+    if((reg_inst->v[reg_no])==cmp_byte){
+        instance->pc=(instance->pc)+2;
+    }
+}
+
+void opcode4(short count){
+    mem_t* instance = get_set_mem(NULL,GET);
+    reg_t* reg_inst = get_set_reg(NULL,GET);
+    uint16_t opcode_placeholder=((instance->program_mem[count])<<8)+((instance->program_mem[count+1]));
+    uint8_t reg_no = opcode_placeholder & 0x0F00;
+    uint8_t cmp_byte = opcode_placeholder &0x00FF;
+    if((reg_inst->v[reg_no])!=cmp_byte){
+        instance->pc=(instance->pc)+2;
+    }
+}
+
+void opcode5(short count){
+    mem_t* instance = get_set_mem(NULL,GET);
+    reg_t* reg_inst = get_set_reg(NULL,GET);
+    uint16_t opcode_placeholder=((instance->program_mem[count])<<8)+((instance->program_mem[count+1]));
+    uint8_t f_reg=opcode_placeholder&0x0f00;
+    uint8_t l_reg=opcode_placeholder&0x00f0;
+    if((reg_inst->v[f_reg])==(reg_inst->v[l_reg])){
+        instance->pc=(instance->pc)+2;
+    }
+}
+
+void opcode6(short count){
+    mem_t* instance = get_set_mem(NULL,GET);
+    reg_t* reg_inst = get_set_reg(NULL,GET);
+    uint16_t opcode_placeholder=((instance->program_mem[count])<<8)+((instance->program_mem[count+1]));
+    uint8_t reg_no = opcode_placeholder & 0x0F00;
+    uint8_t ld_byte = opcode_placeholder &0x00FF;
+    reg_inst->v[reg_no]=ld_byte;
+}
+
+void opcode7(short count){
+    mem_t* instance = get_set_mem(NULL,GET);
+    reg_t* reg_inst = get_set_reg(NULL,GET);
+    uint16_t opcode_placeholder=((instance->program_mem[count])<<8)+((instance->program_mem[count+1]));
+    uint8_t reg_no = opcode_placeholder & 0x0F00;
+    uint8_t add_byte = opcode_placeholder &0x00FF;
+    reg_inst->v[reg_no]=reg_inst->v[reg_no]+add_byte;
+}
+
+void opcode8(short count){
+    mem_t* instance = get_set_mem(NULL,GET);
+    reg_t* reg_inst = get_set_reg(NULL,GET);
+    uint16_t opcode_placeholder=((instance->program_mem[count])<<8)+((instance->program_mem[count+1]));
+    uint8_t l_op=opcode_placeholder&0x000f;
+    uint8_t f_reg=opcode_placeholder&0x0f00;
+    uint8_t l_reg=opcode_placeholder&0x00f0;
+    switch(l_op){
+        case 0:
+            reg_inst->v[f_reg]=reg_inst->v[l_reg];
+            break;
+        case 1:
+            reg_inst->v[f_reg]=reg_inst->v[f_reg]|reg_inst->v[l_reg];
+            break;
+        case 2:
+            reg_inst->v[f_reg]=reg_inst->v[f_reg]&reg_inst->v[l_reg];
+            break;
+        case 3:
+            reg_inst->v[f_reg]=reg_inst->v[f_reg]^reg_inst->v[l_reg];
+            break;
+        case 4:
+            reg_inst->v[f_reg]=reg_inst->v[f_reg]+reg_inst->v[l_reg];
+            short carry_chk=reg_inst->v[f_reg]+reg_inst->v[l_reg];
+            if (carry_chk>255)
+            {
+                reg_inst->v[0xf]=1;
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void opcode9(short count){
+
+}
 
 typedef struct opcodes{
     void (*opcode0)(short);
@@ -62,23 +149,7 @@ typedef struct opcodes{
 }ops_t;
 
 typedef struct regist{
-    uint16_t v0;
-    uint16_t v1;
-    uint16_t v2;
-    uint16_t v3;
-    uint16_t v4;
-    uint16_t v5;
-    uint16_t v6;
-    uint16_t v7;
-    uint16_t v8;
-    uint16_t v9;
-    uint16_t va;
-    uint16_t vb;
-    uint16_t vc;
-    uint16_t vd;
-    uint16_t ve;
-    uint16_t vf;
-    uint16_t vi;
+   uint8_t v[16];
 }reg_t;
 
 typedef struct stack{
@@ -186,25 +257,25 @@ int fetch_decode(){
             opcode2(mem_inst->pc);
             break;
         case 0x3:
-            opcode3();
+            opcode3(mem_inst->pc);
             break;
         case 0x4:
-            opcode4();
+            opcode4(mem_inst->pc);
             break;
         case 0x5:
-            opcode5();
+            opcode5(mem_inst->pc);
             break;
         case 0x6:
-            opcode6();
+            opcode6(mem_inst->pc);
             break;
         case 0x7:
-            opcode7();
+            opcode7(mem_inst->pc);
             break;
         case 0x8:
-            opcode8();
+            opcode8(mem_inst->pc);
             break;
         case 0x9:
-            opcode9();
+            opcode9(mem_inst->pc);
             break;
         case 0xa:
             opcodea();
@@ -231,4 +302,6 @@ int fetch_decode(){
         mem_inst->pc=mem_inst->pc+1;
     }
 }
+
+
 
